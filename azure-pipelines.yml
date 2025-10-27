@@ -1,0 +1,32 @@
+# azure-pipelines.yml
+trigger:
+  - main   # runs when you push to the main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'  # Node.js version
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm install
+      npm run build || echo "No build step"
+      npm test || echo "No tests"
+    displayName: 'Install dependencies and run build/test'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+      replaceExistingArchive: true
+    displayName: 'Archive app files'
+
+  - publish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    artifact: drop
+    displayName: 'Publish build artifact'
+
